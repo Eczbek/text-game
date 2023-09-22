@@ -1,0 +1,189 @@
+<html spellcheck="false" autocorrect="false" autocapitalize="off" style="background-color:#000000;color:#ffffff;font-family:'Courier New',monospace;font-size:16px;">
+	<title>
+		loading...
+	</title>
+	<body>
+		X<button onclick="zoom(0,1)">+</button><button onclick="zoom(0,-1)">-</button>
+		 
+		Y<button onclick="zoom(1,1)">+</button><button onclick="zoom(1,-1)">-</button>
+		<br>
+		<div id="output" style="border:1px solid #ffffff;display:table">
+			use WASD to move
+			<br>
+			hold direction key for 2 seconds to break tile
+			<br>
+			use X to place tile
+			<br>
+			press any key to start
+		</div>
+	</body>
+	<script>
+		let z=[20,10];
+		
+		function zoom(i,v){
+			z[i]+=v;
+			update_output();
+		}
+
+		let size=999; // prompt(`world size`);
+
+		let tiles=[`.`,`#`];
+
+		let cooldown=[20,20,20,20];
+		let cdd=20;
+
+		let t=prompt(`enter world type\n\nempty\nfull\nrandom (recommended)`);
+
+		let world=new Array(size);
+		for(let x=0;x<size;x++){
+			world[x]=new Array(size);
+			for(let y=0;y<size;y++){
+				world[x][y]=t==`empty`?tiles[0]:t==`full`?tiles[1]:tiles[Math.floor(Math.random()*2)];
+			}
+		}
+		
+		function setWorldBorder(){
+			for(let x=0;x<size;x++){
+				world[x][0]=tiles[1];
+			}
+			for(let x=0;x<size;x++){
+				world[x][size-1]=tiles[1];
+			}
+			for(let y=0;y<size;y++){
+				world[0][y]=tiles[1];
+			}
+			for(let y=0;y<size;y++){
+				world[size-1][y]=tiles[1];
+			}
+		}
+
+		let map=new Array(size);
+		for(let x=0;x<size;x++){
+			map[x]=new Array(size);
+			for(let y=0;y<size;y++){
+				map[x][y]=false;
+			}
+		}
+		let p={
+			x:Math.floor(size/2),
+			y:Math.floor(size/2)
+		}
+
+		let input=document.getElementById(`input`);
+		let output=document.getElementById(`output`);
+		let run=document.getElementById(`run`);
+
+		document.addEventListener(`keypress`,(event)=>{
+			// alert(event.keyCode);
+			if(event.keyCode==119){
+				cooldown[0]--;
+				cooldown[1]=cdd;
+				cooldown[2]=cdd;
+				cooldown[3]=cdd;
+				if(world[p.x][p.y-1]==tiles[1]&&cooldown[0]<1){
+					world[p.x][p.y-1]=tiles[0];
+					cooldown[0]=cdd;
+				}
+				else{
+					if(world[p.x][p.y-1]!=tiles[1]){
+						p.y--;
+					}
+				}
+			}
+			if(event.keyCode==115){
+				cooldown[1]--;
+				cooldown[0]=cdd;
+				cooldown[2]=cdd;
+				cooldown[3]=cdd;
+				if(world[p.x][p.y+1]==tiles[1]&&cooldown[1]<1){
+					world[p.x][p.y+1]=tiles[0];
+					cooldown[1]=cdd;
+				}
+				else{
+					if(world[p.x][p.y+1]!=tiles[1]){
+						p.y++;
+					}
+				}
+			}
+			if(event.keyCode==100){
+				cooldown[2]--;
+				cooldown[0]=cdd;
+				cooldown[1]=cdd;
+				cooldown[3]=cdd;
+				if(world[p.x+1][p.y]==tiles[1]&&cooldown[2]<1){
+					world[p.x+1][p.y]=tiles[0];
+					cooldown[2]=cdd;
+				}
+				else{
+					if(world[p.x+1][p.y]!=tiles[1]){
+						p.x++;
+					}
+				}
+			}
+			if(event.keyCode==97){
+				cooldown[3]--;
+				cooldown[0]=cdd;
+				cooldown[1]=cdd;
+				cooldown[2]=cdd;
+				if(world[p.x-1][p.y]==tiles[1]&&cooldown[3]<1){
+					world[p.x-1][p.y]=tiles[0];
+					cooldown[3]=cdd;
+				}
+				else{
+					if(world[p.x-1][p.y]!=tiles[1]){
+						p.x--;
+					}
+				}
+			}
+			if(event.keyCode==0){ // 96
+				p.x=Math.floor(Math.random()*size);
+				p.y=Math.floor(Math.random()*size);
+			}
+			if(event.keyCode==120){
+				world[p.x][p.y]=tiles[1];
+			}
+			
+			map[p.x][p.y]=world[p.x][p.y];
+			map[p.x+1][p.y]=world[p.x+1][p.y];
+			map[p.x-1][p.y]=world[p.x-1][p.y];
+			map[p.x][p.y+1]=world[p.x][p.y+1];
+			map[p.x][p.y-1]=world[p.x][p.y-1];
+
+			setWorldBorder();
+
+			update_output();
+		});
+		function update_output(){
+			// alert(`updating output`);
+			let map_string=``;
+
+			for(let y=p.y-z[1];y<p.y+z[1];y++){
+				for(let x=p.x-z[0];x<p.x+z[0];x++){
+					if(y<0||y>=size||x<0||x>=size){
+						map_string=map_string.concat(`X`);
+					}
+					else{
+						if(x==p.x&&y==p.y){
+							map_string=map_string.concat(`o`);
+						}
+						else{
+							if(map[x][y]){
+								map_string=map_string.concat(map[x][y]);
+							}
+							else{
+								map_string=map_string.concat(`_`);
+							}
+						}
+					}
+				}
+				map_string=map_string.concat(`<br>`);
+			}
+			// alert(map_string);
+			output.innerHTML=map_string;
+		}
+
+		window.onbeforeunload=()=>{
+			return ``;
+		}
+	</script>
+</html>
